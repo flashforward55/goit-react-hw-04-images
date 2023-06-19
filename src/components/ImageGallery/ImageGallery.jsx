@@ -1,41 +1,43 @@
-import { Component } from 'react';
+import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { ImageGalleryList } from './ImageGallery.styled';
 import ImageGalleryItem from './ImageGalleryItem';
 
-class ImageGallery extends Component {
-  componentDidUpdate(prevProps) {
-    if (prevProps.images.length !== this.props.images.length) {
-      this.smoothPageScrolling();
+const ImageGallery = ({ images, onImageClick }) => {
+  const prevImagesLengthRef = useRef(images.length);
+
+  useEffect(() => {
+    if (prevImagesLengthRef.current !== images.length) {
+      const smoothPageScrolling = () => {
+        const { height: cardHeight } = document
+          .querySelector('.gallery')
+          .firstElementChild.getBoundingClientRect();
+
+        const scrollAmount = cardHeight * 3.05;
+        window.scrollBy({
+          top: scrollAmount,
+          behavior: 'smooth',
+        });
+      };
+
+      smoothPageScrolling();
     }
-  }
-  smoothPageScrolling() {
-    const { height: cardHeight } = document
-      .querySelector('.gallery')
-      .firstElementChild.getBoundingClientRect();
 
-    const scrollAmount = cardHeight * 3.05;
-    window.scrollBy({
-      top: scrollAmount,
-      behavior: 'smooth',
-    });
-  }
-  render() {
-    const { images, onImageClick } = this.props;
+    prevImagesLengthRef.current = images.length;
+  }, [images.length]);
 
-    return (
-      <ImageGalleryList className="gallery">
-        {images.map(image => (
-          <ImageGalleryItem
-            key={image.id}
-            image={image}
-            onImageClick={onImageClick}
-          />
-        ))}
-      </ImageGalleryList>
-    );
-  }
-}
+  return (
+    <ImageGalleryList className="gallery">
+      {images.map(image => (
+        <ImageGalleryItem
+          key={image.id}
+          image={image}
+          onImageClick={onImageClick}
+        />
+      ))}
+    </ImageGalleryList>
+  );
+};
 
 ImageGallery.propTypes = {
   images: PropTypes.arrayOf(
