@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppContainer, Message } from './App.styled';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
@@ -7,140 +7,118 @@ import Loader from './Loader';
 import Modal from './Modal';
 import { fetchImagesFromServer, IMAGES_PER_PAGE } from '../services/api';
 
-class App extends Component {
-  state = {
-    searchQuery: '',
-    images: [],
-    currentPage: 1,
-    totalHits: 0,
-    isLoading: false,
-    showModal: false,
-    selectedImage: '',
-    selectedTags: '',
-    searchQueryError: false,
-    noResultsError: false,
-    errorFetchingImages: false,
-    loaderHeight: '100vh',
-  };
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+  const [selectedTags, setSelectedTags] = useState('');
+  const [searchQueryError, setSearchQueryError] = useState(false);
+  const [noResultsError, setNoResultsError] = useState(false);
+  const [errorFetchingImages, setErrorFetchingImages] = useState(false);
+  const [loaderHeight, setLoaderHeight] = useState('100vh');
 
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.searchQuery !== this.state.searchQuery ||
-      prevState.currentPage !== this.state.currentPage
-    ) {
-      this.fetchImages();
-    }
-  }
-
-  handleSearchSubmit = e => {
-    e.preventDefault();
-    const searchQuery = e.target.elements.searchQuery.value.trim();
-    if (searchQuery === '') {
-      this.setState({
-        images: [],
-        currentPage: 1,
-        totalHits: 0,
-        searchQueryError: true,
-        noResultsError: false,
-      });
-    } else {
-      this.setState({
-        images: [],
-        currentPage: 1,
-        totalHits: 0,
-        searchQuery,
-        searchQueryError: false,
-        noResultsError: false,
-        loaderHeight: '100vh',
-      });
-    }
-  };
-
-  fetchImages = async () => {
-    const { searchQuery, currentPage } = this.state;
-    try {
-      this.setState({ isLoading: true });
-      const response = await fetchImagesFromServer(searchQuery, currentPage);
-      if (response.hits.length === 0) {
-        // No results found
-        this.setState({ noResultsError: true });
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (searchQuery === '') {
+        setImages([]);
+        setCurrentPage(1);
+        setTotalHits(0);
+        setSearchQueryError(true);
+        setNoResultsError(false);
       } else {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...response.hits],
-          totalHits: response.totalHits,
-        }));
+        try {
+          setIsLoading(true);
+          const response = await fetchImagesFromServer(
+            searchQuery,
+            currentPage
+          );
+          if (response.hits.length === 0) {
+            setNoResultsError(true);
+          } else {
+            setImages(prevImages => [...prevImages, ...response.hits]);
+            setTotalHits(response.totalHits);
+          }
+        } catch (error) {
+          setErrorFetchingImages(true);
+          console.log('Error fetching images:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    } catch (error) {
-      this.setState({ errorFetchingImages: true });
-      console.log('Error fetching images:', error);
-    } finally {
-      this.setState({ isLoading: false });
+    };
+
+    fetchImages();
+  }, [searchQuery, currentPage]);
+
+  const handleSearchSubmit = e => {
+    e.preventDefault();
+    const searchQueryValue = e.target.elements.searchQuery.value.trim();
+    if (searchQueryValue === '') {
+      setImages([]);
+      setCurrentPage(1);
+      setTotalHits(0);
+      setSearchQueryError(true);
+      setNoResultsError(false);
+    } else {
+      setImages([]);
+      setCurrentPage(1);
+      setTotalHits(0);
+      setSearchQuery(searchQueryValue);
+      setSearchQueryError(false);
+      setNoResultsError(false);
+      setLoaderHeight('100vh');
     }
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      currentPage: prevState.currentPage + 1,
-      isLoading: true,
-    }));
-    this.setState({ loaderHeight: '5vh' });
+  const handleLoadMore = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+    setIsLoading(true);
+    setLoaderHeight('5vh');
   };
 
-  handleImageClick = (imageUrl, imageTags) => {
-    this.setState({
-      selectedImage: imageUrl,
-      selectedTags: imageTags,
-      showModal: true,
-    });
+  const handleImageClick = (imageUrl, imageTags) => {
+    setSelectedImage(imageUrl);
+    setSelectedTags(imageTags);
+    setShowModal(true);
   };
 
-  handleCloseModal = () => {
-    this.setState({ showModal: false, selectedImage: '', selectedTags: '' });
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedImage('');
+    setSelectedTags('');
   };
 
-  render() {
-    const {
-      images,
-      isLoading,
-      showModal,
-      selectedImage,
-      selectedTags,
-      searchQueryError,
-      noResultsError,
-      errorFetchingImages,
-      currentPage,
-      totalHits,
-      loaderHeight,
-    } = this.state;
+  const showLoadMoreButton =
+    currentPage < Math.ceil(totalHits / IMAGES_PER_PAGE);
+  const isLastPage = !showLoadMoreButton && currentPage !== 1;
 
-    const showLoadMoreButton =
-      currentPage < Math.ceil(totalHits / IMAGES_PER_PAGE);
-    const isLastPage = !showLoadMoreButton && currentPage !== 1;
-
-    return (
-      <AppContainer>
-        <Searchbar onSubmit={this.handleSearchSubmit} isLoading={isLoading} />
-        {searchQueryError && <Message>Please enter a search term</Message>}
-        {noResultsError && <Message>No results found</Message>}
-        {errorFetchingImages && <Message>Error fetching images</Message>}
-        {images.length > 0 && (
-          <ImageGallery images={images} onImageClick={this.handleImageClick} />
-        )}
-        {isLoading && <Loader height={loaderHeight} />}
-        {showLoadMoreButton && !isLoading && (
-          <Button onLoadMore={this.handleLoadMore} />
-        )}
-        {isLastPage && <Message>Reached the last page of images</Message>}
-        {showModal && (
-          <Modal
-            imageUrl={selectedImage}
-            imageTags={selectedTags}
-            onCloseModal={this.handleCloseModal}
-          />
-        )}
-      </AppContainer>
-    );
-  }
-}
+  return (
+    <AppContainer>
+      <Searchbar onSubmit={handleSearchSubmit} isLoading={isLoading} />
+      {searchQueryError && <Message>Please enter a search term</Message>}
+      {noResultsError && <Message>No results found</Message>}
+      {errorFetchingImages && <Message>Error fetching images</Message>}
+      {images.length > 0 && (
+        <ImageGallery images={images} onImageClick={handleImageClick} />
+      )}
+      {isLoading && <Loader height={loaderHeight} />}
+      {showLoadMoreButton && !isLoading && (
+        <Button onLoadMore={handleLoadMore} />
+      )}
+      {isLastPage && <Message>Reached the last page of images</Message>}
+      {showModal && (
+        <Modal
+          imageUrl={selectedImage}
+          imageTags={selectedTags}
+          onCloseModal={handleCloseModal}
+        />
+      )}
+    </AppContainer>
+  );
+};
 
 export default App;
