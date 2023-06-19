@@ -17,6 +17,7 @@ const App = () => {
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedTags, setSelectedTags] = useState('');
   const [searchQueryError, setSearchQueryError] = useState(false);
+  const [repeatSearchQuery, setRepeatSearchQuery] = useState(false);
   const [noResultsError, setNoResultsError] = useState(false);
   const [errorFetchingImages, setErrorFetchingImages] = useState(false);
   const [loaderHeight, setLoaderHeight] = useState('100vh');
@@ -29,6 +30,7 @@ const App = () => {
         setTotalHits(0);
         setSearchQueryError(true);
         setNoResultsError(false);
+        setRepeatSearchQuery(false);
       } else {
         try {
           setIsLoading(true);
@@ -57,12 +59,18 @@ const App = () => {
   const handleSearchSubmit = e => {
     e.preventDefault();
     const searchQueryValue = e.target.elements.searchQuery.value.trim();
-    if (searchQueryValue === '') {
-      setImages([]);
-      setCurrentPage(1);
-      setTotalHits(0);
-      setSearchQueryError(true);
-      setNoResultsError(false);
+    if (searchQueryValue === searchQuery) {
+      setRepeatSearchQuery(true);
+      setSearchQueryError(false);
+      if (searchQueryValue === '') {
+        setImages([]);
+        setCurrentPage(1);
+        setTotalHits(0);
+        setSearchQueryError(true);
+        setNoResultsError(false);
+        setRepeatSearchQuery(false);
+        setLoaderHeight('100vh');
+      }
     } else {
       setImages([]);
       setCurrentPage(1);
@@ -71,6 +79,7 @@ const App = () => {
       setSearchQueryError(false);
       setNoResultsError(false);
       setLoaderHeight('100vh');
+      setRepeatSearchQuery(false);
     }
   };
 
@@ -102,6 +111,7 @@ const App = () => {
       {searchQueryError && <Message>Please enter a search term</Message>}
       {noResultsError && <Message>No results found</Message>}
       {errorFetchingImages && <Message>Error fetching images</Message>}
+      {repeatSearchQuery && <Message>The same request was detected</Message>}
       {images.length > 0 && (
         <ImageGallery images={images} onImageClick={handleImageClick} />
       )}
