@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Zoom, ToastContainer, toast } from 'react-toastify';
+import {
+  Slide,
+  Zoom,
+  Flip,
+  Bounce,
+  ToastContainer,
+  toast,
+} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppContainer } from './App.styled';
 import Searchbar from './Searchbar';
@@ -112,38 +119,50 @@ const App = () => {
 
   useEffect(() => {
     if (totalHits) {
-      toast.success(`Hooray! We found ${totalHits} images`);
+      toast.success(`Hooray! We found ${totalHits} images`, {
+        transition: Zoom,
+      });
     }
   }, [totalHits]);
 
   useEffect(() => {
     if (repeatSearchQuery) {
-      toast.warning('The same request was detected');
+      toast.warning('The same request was detected', {
+        transition: Slide,
+      });
     }
   }, [repeatSearchQuery]);
 
   useEffect(() => {
     if (isLastPage) {
-      toast.info("You've reached the end of search results");
+      toast.info("You've reached the end of search results", {
+        transition: Flip,
+      });
     }
   }, [isLastPage]);
 
   useEffect(() => {
     if (errorFetchingImages) {
-      toast.error('Error fetching images. Please try again later');
+      toast.error('Error fetching images. Please try again later', {
+        transition: Bounce,
+      });
     }
   }, [errorFetchingImages]);
 
   useEffect(() => {
     if (searchQueryError && searchButtonClicked) {
-      toast.error('The search string cannot be empty');
+      toast.error('The search string cannot be empty', {
+        transition: Bounce,
+      });
       setSearchButtonClicked(false);
     }
   }, [searchQueryError, searchButtonClicked]);
 
   useEffect(() => {
     if (noResultsError) {
-      toast.error('No images matching your search query. Please try again');
+      toast.error('No images matching your search query. Please try again', {
+        transition: Zoom,
+      });
     }
   }, [noResultsError]);
 
@@ -169,7 +188,6 @@ const App = () => {
         hideProgressBar={true}
         position="top-right"
         theme="colored"
-        transition={Zoom}
       />
     </AppContainer>
   );
