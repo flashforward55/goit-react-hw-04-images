@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { Zoom, ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppContainer } from './App.styled';
 import Searchbar from './Searchbar';
@@ -166,9 +166,10 @@ const App = () => {
       )}
       <ToastContainer
         autoClose={2500}
-        hideProgressBar={false}
+        hideProgressBar={true}
         position="top-right"
         theme="colored"
+        transition={Zoom}
       />
     </AppContainer>
   );
