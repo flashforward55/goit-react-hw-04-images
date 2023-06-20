@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AppContainer, Message } from './App.styled';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { AppContainer } from './App.styled';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
 import Button from './Button';
@@ -28,7 +30,7 @@ const App = () => {
         setImages([]);
         setCurrentPage(1);
         setTotalHits(0);
-        setSearchQueryError(true);
+        setSearchQueryError(false);
         setNoResultsError(false);
         setRepeatSearchQuery(false);
       } else {
@@ -62,15 +64,6 @@ const App = () => {
     if (searchQueryValue === searchQuery) {
       setRepeatSearchQuery(true);
       setSearchQueryError(false);
-      if (searchQueryValue === '') {
-        setImages([]);
-        setCurrentPage(1);
-        setTotalHits(0);
-        setSearchQueryError(true);
-        setNoResultsError(false);
-        setRepeatSearchQuery(false);
-        setLoaderHeight('100vh');
-      }
     } else {
       setImages([]);
       setCurrentPage(1);
@@ -79,6 +72,16 @@ const App = () => {
       setSearchQueryError(false);
       setNoResultsError(false);
       setLoaderHeight('100vh');
+      setRepeatSearchQuery(false);
+    }
+
+    if (searchQueryValue === '') {
+      setImages([]);
+      setCurrentPage(1);
+      setTotalHits(0);
+      setSearchQueryError(true);
+      setNoResultsError(false);
+      setRepeatSearchQuery(false);
       setRepeatSearchQuery(false);
     }
   };
@@ -105,13 +108,45 @@ const App = () => {
     currentPage < Math.ceil(totalHits / IMAGES_PER_PAGE);
   const isLastPage = !showLoadMoreButton && currentPage !== 1;
 
+  useEffect(() => {
+    if (totalHits) {
+      toast.success(`Hooray! We found ${totalHits} images`);
+    }
+  }, [totalHits]);
+
+  useEffect(() => {
+    if (repeatSearchQuery) {
+      toast.warning('The same request was detected');
+    }
+  }, [repeatSearchQuery]);
+
+  useEffect(() => {
+    if (isLastPage) {
+      toast.info("You've reached the end of search results");
+    }
+  }, [isLastPage]);
+
+  useEffect(() => {
+    if (errorFetchingImages) {
+      toast.error('Error fetching images. Please try again later');
+    }
+  }, [errorFetchingImages]);
+
+  useEffect(() => {
+    if (searchQueryError) {
+      toast.error('The search string cannot be empty');
+    }
+  }, [searchQueryError]);
+
+  useEffect(() => {
+    if (noResultsError) {
+      toast.error('No images matching your search query. Please try again');
+    }
+  }, [noResultsError]);
+
   return (
     <AppContainer>
       <Searchbar onSubmit={handleSearchSubmit} isLoading={isLoading} />
-      {searchQueryError && <Message>Please enter a search term</Message>}
-      {noResultsError && <Message>No results found</Message>}
-      {errorFetchingImages && <Message>Error fetching images</Message>}
-      {repeatSearchQuery && <Message>The same request was detected</Message>}
       {images.length > 0 && (
         <ImageGallery images={images} onImageClick={handleImageClick} />
       )}
@@ -119,7 +154,6 @@ const App = () => {
       {showLoadMoreButton && !isLoading && (
         <Button onLoadMore={handleLoadMore} />
       )}
-      {isLastPage && <Message>Reached the last page of images</Message>}
       {showModal && (
         <Modal
           imageUrl={selectedImage}
@@ -127,6 +161,12 @@ const App = () => {
           onCloseModal={handleCloseModal}
         />
       )}
+      <ToastContainer
+        autoClose={2500}
+        hideProgressBar={false}
+        position="top-right"
+        theme="colored"
+      />
     </AppContainer>
   );
 };
