@@ -23,6 +23,7 @@ const App = () => {
   const [noResultsError, setNoResultsError] = useState(false);
   const [errorFetchingImages, setErrorFetchingImages] = useState(false);
   const [loaderHeight, setLoaderHeight] = useState('100vh');
+  const [searchButtonClicked, setSearchButtonClicked] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -84,6 +85,7 @@ const App = () => {
       setRepeatSearchQuery(false);
       setRepeatSearchQuery(false);
     }
+    setSearchButtonClicked(true);
   };
 
   const handleLoadMore = () => {
@@ -133,10 +135,11 @@ const App = () => {
   }, [errorFetchingImages]);
 
   useEffect(() => {
-    if (searchQueryError) {
+    if (searchQueryError && searchButtonClicked) {
       toast.error('The search string cannot be empty');
+      setSearchButtonClicked(false);
     }
-  }, [searchQueryError]);
+  }, [searchQueryError, searchButtonClicked]);
 
   useEffect(() => {
     if (noResultsError) {

@@ -13,7 +13,7 @@ const ImageGallery = ({ images, onImageClick }) => {
           .querySelector('.gallery')
           .firstElementChild.getBoundingClientRect();
 
-        const scrollAmount = cardHeight * 3;
+        const scrollAmount = cardHeight * 3.05;
         window.scrollBy({
           top: scrollAmount,
           behavior: 'smooth',
